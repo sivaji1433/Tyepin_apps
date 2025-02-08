@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typing Speed Test App</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+     /<link rel="stylesheet" href="project css.css">
+    <!-- <link rel="stylesheet" href="project.js"> -->
+
+<style>
+    body {
+    background-color: #338ee9;
+  }
+  
+  .card {
+    border-radius: 20px;
+  }
+  
+  #typingArea {
+    font-size: 1.2rem;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: "Courier New", Courier, monospace;
+  }
+  
+  textarea:disabled {
+    background-color: #e7eaecd8;
+  }
+  
+  #passage {
+    font-size: 1.25rem;
+    font-family: "Courier New", Courier, monospace;
+  }
+  
+  .text-center {
+    font-weight: bold;
+  }
+  
+  button {
+    width: 48%;
+  }
+  
+</style>
+
+  </head>
+  <body>
+    <div class="container">
+      <div class="row justify-content-center mt-5">
+        <div class="col-md-8">
+          <h1 class="text-center mb-4">Typing Speed Test</h1>
+          <div class="card shadow-lg">
+            <div class="card-body">
+              <h5 class="card-title text-center">Passage to Type:</h5>
+              <p id="passage" class="text-center">
+                The quick brown fox jumps over the lazy dog.
+              </p>
+
+              <div class="form-group">
+                <textarea
+                  id="typingArea"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Start typing here..."
+                  disabled
+                ></textarea>
+              </div>
+
+              <div class="d-flex justify-content-between mt-3">
+                <button id="startBtn" class="resetBtn">
+                  Start Testbtn btn-prim
+                </button>
+                <button
+                  id="resetBtn"
+                  class="btn btn-secondary"
+                  style="display: none"
+                >
+                  Reset Test
+                </button>
+              </div>
+
+              <div class="mt-4">
+                <p id="timer" class="text-center">
+                  Time Remaining: <span>60</span> seconds
+                </p>
+                <p id="wpm" class="text-center">Words per Minute: 0</p>
+                <p id="accuracy" class="text-center">Accuracy: 0%</p>
+                <p id="errors" class="text-center">Errors: 0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+let timer;
+let timeLeft = 60; // Time limit in seconds
+let typingStart = false;
+let wordCount = 0;
+let errorCount = 0;
+let correctChars = 0;
+let totalChars = 0;
+
+const startBtn = document.getElementById('startBtn');
+const resetBtn = document.getElementById('resetBtn');
+const typingArea = document.getElementById('typingArea');
+const timerDisplay = document.getElementById('timer');  // time
+const wpmDisplay = document.getElementById('wpm');
+const accuracyDisplay = document.getElementById('accuracy');
+const errorsDisplay = document.getElementById('errors');
+const passage = document.getElementById('passage');
+
+const passageText = passage.textContent;
+
+function startTest() {
+  typingStart = true;
+  startBtn.disabled = true;
+  typingArea.disabled = false;
+  typingArea.focus();
+
+  timer = setInterval(function () {
+    timeLeft--;
+    timerDisplay.textContent = `Time Remaining: ${timeLeft} seconds`;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      finishTest();
+    }
+  }, 1000);
+
+  typingArea.addEventListener('input', handleTyping);
+}
+
+function finishTest() {
+  typingArea.disabled = true;
+  const wpm = calculateWPM();
+  const accuracy = calculateAccuracy();
+  wpmDisplay.textContent = `Words per Minute: ${wpm}`;
+  accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
+  errorsDisplay.textContent = `Errors: ${errorCount}`;
+
+  startBtn.disabled = false;
+  resetBtn.style.display = 'inline-block';
+}
+
+function handleTyping() {
+  const typedText = typingArea.value;
+  let correctTyped = 0;
+  let currentErrorCount = 0;
+
+  totalChars = typedText.length;
+  errorCount = 0;
+
+  let highlightedPassage = '';
+  for (let i = 0; i < passageText.length; i++) {
+    const typedChar = typedText[i] || '';
+    const originalChar = passageText[i];
+    if (typedChar === originalChar) {
+      correctTyped++;
+      highlightedPassage += `<span class="text-success">${typedChar}</span>`;
+    } else if (typedChar !== '') {
+      currentErrorCount++;
+      highlightedPassage += `<span class="text-danger">${typedChar}</span>`;
+    } else {
+      highlightedPassage += `<span class="text-muted">${originalChar}</span>`;
+    }
+  }
+
+  errorCount = currentErrorCount;
+  passage.innerHTML = highlightedPassage;
+
+  correctChars = correctTyped;
+  updateStats();
+}
+
+function calculateWPM() {
+  return Math.floor((correctChars / 5) / (60 - timeLeft) * 60);
+}
+
+function calculateAccuracy() {
+  const accuracy = (correctChars / totalChars) * 100;
+  return accuracy.toFixed(2);
+}
+
+function updateStats() {
+  wpmDisplay.textContent = `Words per Minute: ${calculateWPM()}`;
+  accuracyDisplay.textContent = `Accuracy: ${calculateAccuracy()}%`;
+}
+
+function resetTest() {
+  timeLeft = 60;
+  wordCount = 0;
+  errorCount = 0;
+  correctChars = 0;
+  totalChars = 0;
+
+  typingArea.value = '';
+  passage.innerHTML = passageText;
+
+  wpmDisplay.textContent = `Words per Minute: 0`;
+  accuracyDisplay.textContent = `Accuracy: 0%`;
+  errorsDisplay.textContent = `Errors: 0`;
+
+  startBtn.disabled = false;
+  resetBtn.style.display = 'none';
+  timerDisplay.textContent = `Time Remaining: 60 seconds`;
+}
+
+startBtn.addEventListener('click', startTest);
+resetBtn.addEventListener('click', resetTest);
+
+    </script>
+  </body>
+</html>
